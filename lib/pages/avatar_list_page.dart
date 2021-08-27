@@ -33,8 +33,8 @@ class _AvatarListPageState extends State<AvatarListPage> {
   Widget _imageItem(
       {required final String imagePath, final double size = 100}) {
     return Container(
-        height: 100,
-        width: 100,
+        height: size,
+        width: size,
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: NetworkImage(imagePath), fit: BoxFit.fill),
@@ -61,7 +61,7 @@ class _AvatarListPageState extends State<AvatarListPage> {
 
     return ListView(children: [
       SizedBox(
-          height: 150,
+          height: 130,
           child: ListView(
               scrollDirection: Axis.horizontal,
               children: _listFilter
@@ -73,9 +73,11 @@ class _AvatarListPageState extends State<AvatarListPage> {
                           child: Column(children: [
                             Hero(
                                 tag: _listFilter.indexOf(item),
-                                child:
-                                    _imageItem(imagePath: item["imagePath"])),
-                            Text(item["name"])
+                                child: _imageItem(
+                                    imagePath: item["imagePath"], size: 80)),
+                            Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Text(item["name"], maxLines: 1))
                           ]))))
                   .toList())),
       ListView.separated(
@@ -96,7 +98,7 @@ class _AvatarListPageState extends State<AvatarListPage> {
                           tag: index + _listFilter.length,
                           child: _imageItem(
                               imagePath: _listFilter[index]["imagePath"],
-                              size: 70))),
+                              size: 80))),
                   Expanded(
                       child: Padding(
                           padding: const EdgeInsets.all(5),

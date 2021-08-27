@@ -20,8 +20,8 @@ class _VisualizeItemPageState extends State<VisualizeItemPage> {
     return Hero(
         tag: widget.heroID,
         child: Container(
-            height: 200.0,
-            width: 200.0,
+            height: 250.0,
+            width: 250.0,
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: NetworkImage(widget.item["imagePath"]),
