@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test_coppel/pages/visualize_item_page.dart';
+import 'package:flutter_test_coppel/utilities/methods/public.dart';
 import 'package:flutter_test_coppel/utilities/search_appbar.dart';
+import 'package:http/http.dart' as http;
 
 class AvatarListPage extends StatefulWidget {
   const AvatarListPage({Key? key}) : super(key: key);
@@ -31,13 +35,15 @@ class _AvatarListPageState extends State<AvatarListPage> {
   }
 
   Widget _imageItem(
-      {required final String imagePath, final double size = 100}) {
+      {required final String? imagePath, final double size = 100}) {
     return Container(
         height: size,
         width: size,
         decoration: BoxDecoration(
-            image: DecorationImage(
-                image: NetworkImage(imagePath), fit: BoxFit.fill),
+            image: (imagePath != null)
+                ? DecorationImage(
+                    image: NetworkImage(imagePath), fit: BoxFit.fill)
+                : null,
             shape: BoxShape.circle));
   }
 
@@ -74,7 +80,7 @@ class _AvatarListPageState extends State<AvatarListPage> {
                             Hero(
                                 tag: _listFilter.indexOf(item),
                                 child: _imageItem(
-                                    imagePath: item["imagePath"], size: 80)),
+                                    imagePath: item["images"]?["sm"], size: 80)),
                             Padding(
                                 padding: const EdgeInsets.all(5),
                                 child: Text(item["name"], maxLines: 1))
@@ -97,7 +103,7 @@ class _AvatarListPageState extends State<AvatarListPage> {
                       child: Hero(
                           tag: index + _listFilter.length,
                           child: _imageItem(
-                              imagePath: _listFilter[index]["imagePath"],
+                              imagePath: _listFilter[index]["images"]?["sm"],
                               size: 80))),
                   Expanded(
                       child: Padding(
@@ -118,35 +124,24 @@ class _AvatarListPageState extends State<AvatarListPage> {
   Future<void> _loadData() async {
     await Future.delayed(Duration.zero);
     try {
-      _listItems = [
-        {
-          "name": "Super man",
-          "imagePath":
-              "https://www.tomosygrapas.com/wp-content/uploads/2021/02/Portada-co%CC%81mic-Superman-78-de-Reeves-copia.jpg"
-        },
-        {
-          "name": "Batman",
-          "imagePath":
-              "https://dam.smashmexico.com.mx/wp-content/uploads/2020/04/ayuda-a-tu-pequeno-a-hacer-el-cinturon-de-batman-cover.jpg"
-        },
-        {
-          "name": "Flash",
-          "imagePath":
-              "https://img.europapress.es/fotoweb/fotonoticia_20210121145702_420.jpg"
-        },
-        {
-          "name": "Hulk",
-          "imagePath":
-              "https://i.pinimg.com/originals/3e/2f/6a/3e2f6a9ce186fe59b4a7d392e1c96764.jpg"
-        },
-        {
-          "name": "Thanos",
-          "imagePath":
-              "https://cdn.hobbyconsolas.com/sites/navi.axelspringer.es/public/media/image/2019/04/thanos_0.jpg"
-        }
-      ];
-      setState(() {});
-    } catch (error) {}
+      final http.Response response = await http.get(
+          Uri.parse(
+              "https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json"),
+          headers: {
+            'Content-Type': 'application/json'
+          }).timeout(const Duration(seconds: 30),
+          onTimeout: () => throw "Se acabó el tiempo");
+      if (response.statusCode == 200) {
+        _listItems = await json.decode(utf8.decode(response.bodyBytes));
+        setState(() {});
+      } else {
+        throw await PublicMethods.getErrorFromServer(
+            response: response, context: context);
+      }
+    } catch (error) {
+      PublicMethods.snackMessage(
+          message: error.toString(), context: context, isError: true);
+    }
   }
 
   Future<void> _selectItem(
@@ -154,6 +149,9 @@ class _AvatarListPageState extends State<AvatarListPage> {
     try {
       Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => VisualizeItemPage(item: item, heroID: heroID)));
-    } catch (error) {}
+    } catch (error) {
+      PublicMethods.snackMessage(
+          message: error.toString(), context: context, isError: true);
+    }
   }
 }
